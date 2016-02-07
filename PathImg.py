@@ -135,7 +135,7 @@ def searchPath(x,y):
 			if px == edge:
 				pixel[x,y] = joined_pixel
 				if show_przss3:
-					plotL(x,y,0,0,255,True)
+					plotL(x,y,0,0,255,False)
 				x = x+1
 				y = y+1
 				continue
@@ -145,7 +145,7 @@ def searchPath(x,y):
 			if px == edge:
 				pixel[x,y] = joined_pixel
 				if show_przss3:
-					plotL(x,y,0,0,255,True)
+					plotL(x,y,0,0,255,False)
 				x = x+1
 				y = y-1
 				continue
@@ -155,7 +155,7 @@ def searchPath(x,y):
 			if px == edge:
 				pixel[x,y] = joined_pixel
 				if show_przss3:
-					plotL(x,y,0,0,255,True)
+					plotL(x,y,0,0,255,False)
 				x = x-1
 				y = y+1
 				continue
@@ -166,7 +166,7 @@ def searchPath(x,y):
 				pixel[x,y] = joined_pixel
 
 				if show_przss3:
-					plotL(x,y,0,0,255,True)
+					plotL(x,y,0,0,255,False)
 				x = x-1
 				y = y-1
 				continue
@@ -176,7 +176,7 @@ def searchPath(x,y):
 			if px == edge:
 				pixel[x,y] = joined_pixel
 				if show_przss3:
-					plotL(x,y,0,0,255,True)
+					plotL(x,y,0,0,255,False)
 				x = x+1
 				y = y
 				continue
@@ -186,7 +186,7 @@ def searchPath(x,y):
 			if px == edge:
 				pixel[x,y] = joined_pixel
 				if show_przss3:
-					plotL(x,y,0,0,255,True)
+					plotL(x,y,0,0,255,False)
 				x = x-1
 				y = y
 				continue
@@ -196,7 +196,7 @@ def searchPath(x,y):
 			if px == edge:
 				pixel[x,y] = joined_pixel
 				if show_przss3:
-					plotL(x,y,0,0,255,True)
+					plotL(x,y,0,0,255,False)
 				x = x
 				y = y+1
 				continue
@@ -206,7 +206,7 @@ def searchPath(x,y):
 			if px == edge:
 				pixel[x,y] = joined_pixel
 				if show_przss3:
-					plotL(x,y,0,0,255,True)
+					plotL(x,y,0,0,255,False)
 				x = x
 				y = y-1
 				continue
@@ -229,6 +229,10 @@ while len(edgeList) > 0:
 	lastPath = searchPath(nextPath[0],nextPath[1])
 	print "remaining edges: %s %.1f%s\r" %(len(edgeList),100-100*(len(edgeList)+0.001)/totalLen,"%    "),
 	stdout.flush()
+	if show_przss3:
+		plotter.show()
+
+
 print "remaining edges: %s 100%s" %(len(edgeList),"%   ") 
 	
 im.save(output_path+filename, format="png")
