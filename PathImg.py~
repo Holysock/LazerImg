@@ -3,6 +3,7 @@ import os
 import sys
 import plotlib
 from PIL import Image
+from sys import stdout 
 
 file_path = os.path.join(os.path.dirname(__file__), sys.argv[1])
 filename = sys.argv[2]
@@ -12,6 +13,9 @@ im = im.convert('RGB')
 pixel = im.load()
 output_path = os.path.join(os.path.dirname(__file__), "output/")
 
+show_przss1 = True
+show_przss2 = True
+show_przss3 = True
 
 size_x = int(im.size[0])
 size_y = int(im.size[1])
@@ -43,30 +47,49 @@ def plotL(x,y,r,g,b,s):
 
 precalc = math.sqrt(math.pow(255,2)+math.pow(255,2)+math.pow(255,2)) #precalculation of the length of an 3 dimensional RGB-color vector (255,255,255) - white
 
+print "converting image to black&white..."
+
 for j in range(size_y):
 	for i in range(size_x): 
 		pixelRGB = pixel[i,j]
 		tmp = int((math.sqrt(math.pow(pixelRGB[0],2)+math.pow(pixelRGB[1],2)+math.pow(pixelRGB[2],2)))/precalc*255) 
 		pixel[i,j] = (setPixel(tmp),setPixel(tmp),setPixel(tmp))
-		plotL(i,j,setPixel(tmp),setPixel(tmp),setPixel(tmp),False)
+		if show_przss1:
+			plotL(i,j,setPixel(tmp),setPixel(tmp),setPixel(tmp),False)
+	print "converting: %.2f%s\r" %(100*(float(j+1))/size_y,"%      "),
+	stdout.flush()
 	plotter.show()
 
+print "converting complete!"
+
+im.save(output_path+filename+'_BW', format="png")
 
 edge = (255,0,0)
+edgeList = []
 joined_pixel = (0,0,255)
+white = (255,255,255)
 
+print "searching for edges..." 
 for j in range(size_y):
 	for i in range(size_x): 
 		if i < size_x-1:
 			this_pixel = pixel[i,j]
 			next_pixel = pixel[i+1,j]
-			if not (this_pixel[1] ==  next_pixel[1]): 
-				if this_pixel[1] == 255:
-					pixel[i+1,j]=(255,0,0)
-					plotL(i+1,j,255,0,0,False)
-				elif next_pixel[1] == 255:
-					pixel[i,j]=(255,0,0)
-					plotL(i,j,255,0,0,False)
+			if not this_pixel[1] ==  next_pixel[1]: 
+				if this_pixel==white and not next_pixel==edge:
+					edgePos = (i+1,j)
+					pixel[edgePos] = edge
+					edgeList.append(edgePos) 
+					if show_przss2:
+						plotL(i+1,j,255,0,0,False)
+				elif next_pixel==white and not this_pixel==edge:
+					edgePos = (i,j)
+					pixel[edgePos] = edge
+					edgeList.append(edgePos) 
+					if show_przss2:
+						plotL(i,j,255,0,0,False)
+	print "%s %.1f%s\r" %(len(edgeList),(float(j+1)/size_y)*50,"%             "),
+	stdout.flush()
 	plotter.show()
 
 for j in range(size_x):
@@ -74,14 +97,27 @@ for j in range(size_x):
 		if i < size_y-1:
 			this_pixel = pixel[j,i]
 			next_pixel = pixel[j,i+1]
-			if not (this_pixel[1] ==  next_pixel[1]): 
-				if this_pixel[1] == 255:
-					pixel[j,i+1]=(255,0,0)
-					plotL(j,i+1,255,0,0,False)
-				elif next_pixel[1] == 255:
-					pixel[j,i]=(255,0,0)
-					plotL(j,i,255,0,0,False)
+			if not this_pixel[1] ==  next_pixel[1]: 
+				if this_pixel==white and not next_pixel==edge:
+					edgePos = (j,i+1)
+					pixel[edgePos] = edge
+					edgeList.append(edgePos)
+					if show_przss2:
+						plotL(j,i+1,255,0,0,False)
+				elif next_pixel==white and not this_pixel==edge:
+					edgePos = (j,i)
+					pixel[edgePos] = edge
+					edgeList.append(edgePos)
+					if show_przss2:
+						plotL(j,i,255,0,0,False)
+	print "%s %.1f%s\r" %(len(edgeList),(float(j+1)/size_x)*50+50,"%          "),
+	stdout.flush()
 	plotter.show()
+
+print "found edges: %s" %(len(edgeList))
+print "creating path..."
+
+stdout.flush()
 
 def testIndex(x,y):
 	if x == -1 or y == -1 or x == size_x or y == size_y:
@@ -92,13 +128,14 @@ def testIndex(x,y):
 def searchPath(x,y):
 	pixel[x,y] = joined_pixel
 	blubb = True
-	while(blubb):
+	while(1):
+		edgeList.remove((x,y))
 		if testIndex(x+1,y+1):
 			px = pixel[x+1,y+1]
 			if px == edge:
-				print 'a'
 				pixel[x,y] = joined_pixel
-				plotL(x,y,0,0,255,True)
+				if show_przss3:
+					plotL(x,y,0,0,255,True)
 				x = x+1
 				y = y+1
 				continue
@@ -106,9 +143,9 @@ def searchPath(x,y):
 		if testIndex(x+1,y-1):	
 			px = pixel[x+1,y-1]
 			if px == edge:
-				print 'b'
 				pixel[x,y] = joined_pixel
-				plotL(x,y,0,0,255,True)
+				if show_przss3:
+					plotL(x,y,0,0,255,True)
 				x = x+1
 				y = y-1
 				continue
@@ -116,9 +153,9 @@ def searchPath(x,y):
 		if testIndex(x-1,y+1):
 			px = pixel[x-1,y+1]
 			if px == edge:
-				print 'c'
 				pixel[x,y] = joined_pixel
-				plotL(x,y,0,0,255,True)
+				if show_przss3:
+					plotL(x,y,0,0,255,True)
 				x = x-1
 				y = y+1
 				continue
@@ -126,9 +163,10 @@ def searchPath(x,y):
 		if testIndex(x-1,y-1):
 			px = pixel[x-1,y-1]
 			if px == edge:
-				print 'd'
 				pixel[x,y] = joined_pixel
-				plotL(x,y,0,0,255,True)
+
+				if show_przss3:
+					plotL(x,y,0,0,255,True)
 				x = x-1
 				y = y-1
 				continue
@@ -136,9 +174,9 @@ def searchPath(x,y):
 		if testIndex(x+1,y):
 			px = pixel[x+1,y]
 			if px == edge:
-				print 'e'
 				pixel[x,y] = joined_pixel
-				plotL(x,y,0,0,255,True)
+				if show_przss3:
+					plotL(x,y,0,0,255,True)
 				x = x+1
 				y = y
 				continue
@@ -146,9 +184,9 @@ def searchPath(x,y):
 		if testIndex(x-1,y):
 			px = pixel[x-1,y]
 			if px == edge:
-				print 'f'
 				pixel[x,y] = joined_pixel
-				plotL(x,y,0,0,255,True)
+				if show_przss3:
+					plotL(x,y,0,0,255,True)
 				x = x-1
 				y = y
 				continue
@@ -156,9 +194,9 @@ def searchPath(x,y):
 		if testIndex(x,y+1):
 			px = pixel[x,y+1]
 			if px == edge:
-				print 'g'
 				pixel[x,y] = joined_pixel
-				plotL(x,y,0,0,255,True)
+				if show_przss3:
+					plotL(x,y,0,0,255,True)
 				x = x
 				y = y+1
 				continue
@@ -166,26 +204,39 @@ def searchPath(x,y):
 		if testIndex(x,y-1):
 			px = pixel[x,y-1]
 			if px == edge:
-				print 'h'
 				pixel[x,y] = joined_pixel
-				plotL(x,y,0,0,255,True)
+				if show_przss3:
+					plotL(x,y,0,0,255,True)
 				x = x
 				y = y-1
 				continue
-		blubb = False
+		return x,y 
 
-for j in range(size_y):
-	for i in range(size_x): 
-		if pixel[i,j] == edge:
-			searchPath(i,j)
-
+def seachNextEdge(x,y):
+	nearestEdge = edgeList[0]
+	distance = math.sqrt(math.pow(nearestEdge[0]-x,2)+math.pow(nearestEdge[0]-y,2)) 
+	for i in edgeList:
+		newDistance = math.sqrt(math.pow(i[0]-x,2)+math.pow(i[1]-y,2))
+		if newDistance < distance:
+			distance = newDistance
+			nearestEdge = i
+	return nearestEdge
+		
+lastPath = (0,0)
+totalLen = len(edgeList)
+while len(edgeList) > 0:
+	nextPath = seachNextEdge(lastPath[0],lastPath[1])
+	lastPath = searchPath(nextPath[0],nextPath[1])
+	print "remaining edges: %s %.1f%s\r" %(len(edgeList),100-100*(len(edgeList)+0.001)/totalLen,"%    "),
+	stdout.flush()
+print "remaining edges: %s 100%s" %(len(edgeList),"%   ") 
+	
 im.save(output_path+filename, format="png")
 
-print 'done :3'
+print "Done :3"
+print "Press any key to exit."
 
-while(1):
-	pass
-
+raw_input()
 
 
 

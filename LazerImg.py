@@ -21,6 +21,7 @@ filename = sys.argv[2]
 pixelScale = float(sys.argv[3]) # to scale the pixels of the image in mm. 1.0 -> 1 pixel/mm
 
 im = Image.open(file_path)
+im = im.convert('RGB')
 pixel = im.load()
 
 output_path = os.path.join(os.path.dirname(__file__), "output/")
