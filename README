@@ -1,0 +1,5 @@
+Use: sudo python PathImg.py [fileName] [outputName] [threshold] [feedrate] [renderScale] [pxScale]
+
+example: sudo python PathImg.py images/katia.png katia 140 3 2 0.1
+
+processed images and g-codes are saved in /output

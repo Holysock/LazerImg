@@ -55,13 +55,13 @@ def setFr(value):
 		return feedrate - feedrate*((float(value)-128)/127)*0.5
 
 	#Head of Gcode
-target.write('#############################################################\n')
-target.write('###########Gcode generated with LazerImg.py V0.1#############\n')
-target.write('######written by Nick Sidney Lemberger aka Holysocks#########\n')
-target.write('#############################################################\n\n')
-target.write('%s\n' %(filename))
-target.write('laser_engraver(diode, 445nm)\n')
-target.write('X%s Y%s \n' %(offset_x,offset_y))
+target.write('/#############################################################/ \n')
+target.write('/###########Gcode generated with LazerImg.py V0.1#############/ \n')
+target.write('/######written by Nick Sidney Lemberger aka Holysocks#########/ \n')
+target.write('/#############################################################/ \n\n')
+target.write('/%s/ \n' %(filename))
+target.write('/laser_engraver(diode, 445nm)/ \n')
+target.write('/X%s Y%s/ \n' %(offset_x,offset_y))
 target.write('\n\n\n')
 target.write('F%s \n\n\n' %(feedrate*2)) #redundant
 
