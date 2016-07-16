@@ -21,15 +21,15 @@ show_connects = True
 square = 5
 
 if len(sys.argv) < 7:
-    print "Parameters: fileName, outputName, threshold, feedrate, renderScale, pxScale"
+    print "Parameters: fileName, outputName, threshold, feedrate, renderScale, DPI"
     exit()
 
 file_path = os.path.join(os.path.dirname(__file__), sys.argv[1])
 filename = sys.argv[2]
 threshold = float(sys.argv[3])  # between 0 and 255
-feedrate = float(sys.argv[4])  # in mm/s. note: change to dynamic feedrate variation later
+feedrate = float(sys.argv[4])
 renderScale = float(sys.argv[5])
-pxScale = float(sys.argv[6])
+pxScale = 1/((float(sys.argv[6]))/25.4)
 
 im = Image.open(file_path)
 im = im.convert('RGB')
@@ -46,11 +46,11 @@ print "Size: %.2fmm X %.2fmm " % (size_x * pxScale, size_y * pxScale)
 target = open(output_path + filename + '.nc', 'w')
 target.seek(0)
 
-plotter = plotlib.plot(int(size_x / renderScale), int(size_y / renderScale))  # just for visualization and debugging
+plotter = plotlib.plot(int(size_x/renderScale), int(size_y/renderScale))  # just for visualization and debugging
 plotter.setBackground(0, 0, 0)
 
-precalc = math.sqrt(math.pow(255, 2) + math.pow(255, 2) + math.pow(255,
-                                                                   2))  # precalculation of the length of an 3 dimensional RGB-color vector (255,255,255) - white
+precalc = math.sqrt(math.pow(255, 2) + math.pow(255, 2) + math.pow(255, 2))
+# precalculation of the length of an 3 dimensional RGB-color vector (255,255,255) - white
 
 if (threshold >= 255):
     threshold = 255
@@ -63,8 +63,9 @@ target.write('/###########Gcode generated with PathImg.py V0.4##############/ \n
 target.write('/######written by Nick Sidney Lemberger aka Holysocks#########/ \n')
 target.write('/#############################################################/ \n\n')
 target.write('/%s/ \n' % (filename))
-target.write('/laser_engraver(diode, 445nm)/ \n')
 target.write('\n\n\n')
+target.write('G90\n')
+target.write('G28\n')
 target.write('G00 X0 Y0 Z0 \n')
 
 
