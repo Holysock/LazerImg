@@ -12,7 +12,6 @@ import math
 import os
 import sys
 from sys import stdout
-
 from PIL import Image
 
 if len(sys.argv) < 8:
