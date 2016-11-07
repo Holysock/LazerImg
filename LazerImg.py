@@ -15,12 +15,13 @@ from sys import stdout
 from PIL import Image
 
 if len(sys.argv) < 8:
-    print "parameters: path, filename, px_scale, offset_x, offset_y, feedrate_max, laser_scale"
+    print "parameters: path, filename, DPI, offset_x, offset_y, feedrate_max, laser_scale"
     exit()
 
+inch = 25.4#mm
 file_path = os.path.join(os.path.dirname(__file__), sys.argv[1])
 filename = sys.argv[2]
-pixelScale = float(sys.argv[3])  # to scale the pixels of the image in mm. 1.0 -> 1 pixel/mm
+pixelScale = inch/float(sys.argv[3])  # to scale the pixels of the image in mm. 1.0 -> 1 pixel/mm
 
 im = Image.open(file_path)
 im = im.convert('RGB')
