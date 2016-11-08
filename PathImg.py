@@ -17,7 +17,7 @@ show_przss1 = True
 show_przss2 = True
 show_przss3 = True
 show_connects = True
-square = 5
+square = 10
 
 if len(sys.argv) < 7:
     print "Parameters: fileName, outputName, threshold, feedrate, renderScale, DPI"
@@ -102,8 +102,8 @@ im.save(output_path + filename + '_BW', format="png")
 
 edge = (255, 0, 0)  # edges (black to white or white to black) are red
 edgeList = []  # contains position of all edges as tupels (x,y)
-joined_pixel = (0, 0, 255)  # pixel, joined into a path are blue
-white = (255, 255, 255)  # Cpt. Obvious strikes again
+joined_pixel = (0, 0, 255)  # pixel joined into a path, are blue
+white = (255, 255, 255)
 
 plotter.setBackground(0, 0, 0)
 # Second process: searching edges
@@ -240,11 +240,19 @@ def searchPath(x, y):
             x = x
             y -= 1
             dirct = 8
-
-        subPath.append((x, y, dirct))
         if dirct == 0:
-            return x, y, subPath  # returns end of path and created subPath
+            return isSubPathCircle(x,y,subPath)  # returns end of path and created subPath, also checks is path is a circle (ends where it starts)
+        subPath.append((x, y, dirct))
 
+def isSubPathCircle(x,y,path):
+	if len(path) <= 7: return (x,y,path)
+	a = path[0][0]
+	b = path[0][1]
+	if x-1 <= a <= x+1 and y-1 <= b <= y+1: 
+		path.append((a,b,path[0][2]))
+		return a,b,path
+	else: 
+		return x,y,path
 
 def seachNextEdge(x, y, givenList):  # returns edge with smallest distance to the given one
     nearestEdge = givenList[0]  # note: version 1. Do not use for Entropy > 10% !!
@@ -256,13 +264,6 @@ def seachNextEdge(x, y, givenList):  # returns edge with smallest distance to th
             distance = newDistance
             nearestEdge = i
     return nearestEdge
-
-def isSubPathCircle(path):
-	a = path[0]
-	b = path[1]
-	if x-1 <= a <= x+1 and y-1 <= b <= y+1: pass
-	else: 
-		pass
 
 def searchInSquare(x, y):
     tmpList = []
@@ -277,7 +278,6 @@ def searchInSquare(x, y):
     else:
         return seachNextEdge(lastPath[0], lastPath[1], tmpList)
 
-
 # Finally, creating sub-paths and joining them
 lastPath = (0, 0, 0)
 totalLen = len(edgeList)
@@ -287,8 +287,7 @@ while len(edgeList) > 0:  # as long as there are edges left...
     nextPath = searchInSquare(lastPath[0], lastPath[1])  # same, but searches for edges in a smaller area
     if show_connects:
         plotter.setColor(0, 50, 0)
-        plotter.plotline(lastPath[0] / renderScale, lastPath[1] / renderScale, nextPath[0] / renderScale,
-                         nextPath[1] / renderScale)
+        plotter.plotline(lastPath[0]/renderScale, lastPath[1]/renderScale, nextPath[0]/renderScale, nextPath[1]/renderScale)
     lastPath = searchPath(nextPath[0], nextPath[1])  # search next path and save endpoint for next iteration
     if len(lastPath[2]) > 1:  # prevents artifacts (one-pixel-paths / path without direction))
         joinedSubPaths.append(lastPath[2])  # joins sub-path
