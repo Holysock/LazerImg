@@ -17,7 +17,6 @@ show_przss1 = True
 show_przss2 = True
 show_przss3 = True
 show_connects = True
-
 square = 5
 
 if len(sys.argv) < 7:
@@ -258,6 +257,12 @@ def seachNextEdge(x, y, givenList):  # returns edge with smallest distance to th
             nearestEdge = i
     return nearestEdge
 
+def isSubPathCircle(path):
+	a = path[0]
+	b = path[1]
+	if x-1 <= a <= x+1 and y-1 <= b <= y+1: pass
+	else: 
+		pass
 
 def searchInSquare(x, y):
     tmpList = []

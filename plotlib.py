@@ -29,7 +29,7 @@ class plot:
 		self.plotline(x,y,x,y)
 		if self.autoflipping: pygame.display.flip()
 	def plotline(self, x1, y1, x2, y2):
-		pygame.draw.line(self.screen, (self.r,self.g,self.b), (x1,y1),(x2,y2),2)
+		pygame.draw.line(self.screen, (self.r,self.g,self.b), (x1,y1),(x2,y2),1)
 		if self.autoflipping: pygame.display.flip()
 		
 	def show(self):

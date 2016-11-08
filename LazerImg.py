@@ -70,7 +70,7 @@ target.write('/%s/ \n' % (filename))
 target.write('/laser_engraver(diode, 445nm, 2000mW)/ \n')
 target.write('/X%s Y%s/ \n' % (offset_x, offset_y))
 target.write('\n\n\n')
-target.write('F%s \n\n\n' % (feedrateHome))  # redundant
+#target.write('F%s \n\n\n' % (feedrateHome))  # redundant
 
 # preprocessing:
 lengthOfPath2 = 0
