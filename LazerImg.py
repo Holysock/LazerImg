@@ -15,13 +15,13 @@ from sys import stdout
 from PIL import Image
 
 if len(sys.argv) < 8:
-    print "parameters: path, filename, DPI, offset_x, offset_y, feedrate_max, laser_scale"
+    print "parameters: path_to_file, outputName, DPI, offset_x, offset_y, feedrate_max, laser_scale"
     exit()
 
 inch = 25.4#mm
 file_path = os.path.join(os.path.dirname(__file__), sys.argv[1])
 filename = sys.argv[2]
-pixelScale = inch/float(sys.argv[3])  # to scale the pixels of the image in mm. 1.0 -> 1 pixel/mm
+pxScale = inch/float(sys.argv[3])  # to scale the pixels of the image in mm. 1.0 -> 1 pixel/mm
 
 im = Image.open(file_path)
 im = im.convert('RGB')
@@ -33,7 +33,7 @@ size_x = int(im.size[0])
 size_y = int(im.size[1])
 
 print "pixel: %spx x %spx" % (size_x, size_y)
-print "size: %smm x %smm" % (size_x * pixelScale, size_y * pixelScale)
+print "size: %smm x %smm" % (size_x * pxScale, size_y * pxScale)
 
 target = open(output_path + filename + '.nc', 'w')
 target.seek(0)
@@ -83,7 +83,7 @@ for j in range(size_y):  # iterates through y-axis of the image
         tmp = int((255 - int((math.sqrt(math.pow(pixelRGB[0], 2) + math.pow(pixelRGB[1], 2) + math.pow(pixelRGB[2],
             2))) / precalc * 255)) * laserScale)
         pixel[i, j] = (tmp, tmp, tmp)
-    lengthOfPath2 += (size_x + 1) * pixelScale
+    lengthOfPath2 += (size_x + 1) * pxScale
     print 'Preprocessing: %.2f%s%s\r' % ((float(j) / (size_y - 1)) * 100, '%', '       '),
     stdout.flush()
 
@@ -146,24 +146,24 @@ for j in range(size_y):
 
             if edge == 1:
                 target.write('G01 X%s Y%s Z%s F%.2f \n' % (
-                    (k * pixelScale) + offset_x, (j * pixelScale) + offset_y, thisPX,
+                    (k * pxScale) + offset_x, (j * pxScale) + offset_y, thisPX,
                     setFr(thisPX))) # writes a simple G1 path with Z as modulation value
             if k != notWhiteTo and flag == 0 and edge == 0:
                 target.write('G01 X%s Y%s Z%s F%.2f \n' % (
-                    ((k + 0.5) * pixelScale) + offset_x, (j * pixelScale) + offset_y, thisPX, setFr(thisPX)))
+                    ((k + 0.5) * pxScale) + offset_x, (j * pxScale) + offset_y, thisPX, setFr(thisPX)))
             elif k != notWhiteFrom and flag == 1 and edge == 0:
                 target.write('G01 X%s Y%s Z%s F%.2f \n' % (
-                    ((k - 0.5) * pixelScale) + offset_x, (j * pixelScale) + offset_y, thisPX, setFr(thisPX)))
+                    ((k - 0.5) * pxScale) + offset_x, (j * pxScale) + offset_y, thisPX, setFr(thisPX)))
             lengthOfPath += math.sqrt(
-                math.pow((k - lastPos[0]) * pixelScale, 2) + math.pow((j - lastPos[1]) * pixelScale, 2))
+                math.pow((k - lastPos[0]) * pxScale, 2) + math.pow((j - lastPos[1]) * pxScale, 2))
             lastPos[0:2] = k, j
 
     if cFlag == 1:
         target.write(
-            'G00 X%s Y%s Z%s\n' % ((k * pixelScale) + offset_x, ((j + 1) * pixelScale) + offset_y, 0))
+            'G00 X%s Y%s Z%s\n' % ((k * pxScale) + offset_x, ((j + 1) * pxScale) + offset_y, 0))
 
         lengthOfPath += math.sqrt(
-            math.pow((k - lastPos[0]) * pixelScale, 2) + math.pow(((j + 1) - lastPos[1]) * pixelScale, 2))
+            math.pow((k - lastPos[0]) * pxScale, 2) + math.pow(((j + 1) - lastPos[1]) * pxScale, 2))
         lastPos[0:2] = k, j + 1
 
     print 'Calculation of path: %.2f%s%s\r' % ((float(j) / (size_y - 1)) * 100, '%', '       '),

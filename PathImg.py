@@ -20,15 +20,19 @@ show_connects = True
 square = 10
 
 if len(sys.argv) < 7:
-    print "Parameters: fileName, outputName, threshold, feedrate, renderScale, DPI"
+    print "Parameters: path_to_file, outputName, DPI, threshold, renderScale, offset_x, offset_y, feedrate_max"
     exit()
 
 file_path = os.path.join(os.path.dirname(__file__), sys.argv[1])
 filename = sys.argv[2]
-threshold = float(sys.argv[3])  # between 0 and 255
-feedrate = float(sys.argv[4])
+threshold = float(sys.argv[4])  # between 0 and 255
+offset_x = float(sys.argv[6])  # in mm
+offset_y = float(sys.argv[7])
+feedrate = float(sys.argv[8])
 renderScale = float(sys.argv[5])
-pxScale = 1/((float(sys.argv[6]))/25.4)
+inch = 25.4#mm
+pxScale = inch/float(sys.argv[3])
+
 
 im = Image.open(file_path)
 im = im.convert('RGB')
@@ -303,10 +307,10 @@ print "Total number of sub-pathes: %s%s" % (len(joinedSubPaths), ' ' * 20)
 
 def writeGcode(nextPoint_x, nextPoint_y, laser):
     if laser > 0:
-        target.write('G01 X%s Y%s Z%s F%.2f \n' % (nextPoint_x * pxScale, nextPoint_y * pxScale, laser, feedrate))
+        target.write('G01 X%s Y%s Z%s F%.2f \n' % (nextPoint_x * pxScale + offset_x, nextPoint_y * pxScale + offset_y, laser, feedrate))
     else:
         target.write(
-            'G00 X%s Y%s Z%s\n\n' % (nextPoint_x * pxScale, nextPoint_y * pxScale, laser))
+            'G00 X%s Y%s Z%s\n\n' % (nextPoint_x * pxScale + offset_x, nextPoint_y * pxScale + offset_y, laser))
 
 
 for i in joinedSubPaths:
