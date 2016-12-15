@@ -6,9 +6,7 @@ import os
 import sys
 import time
 from sys import stdout
-
 from PIL import Image
-
 import plotlib
 
 timeStart = float(time.time())
@@ -315,16 +313,20 @@ def writeGcode(nextPoint_x, nextPoint_y, laser):
 
 for i in joinedSubPaths:
     lastDirct = 0
+    lastPoint = [0,0]
     target.flush()
     for j in xrange(len(i)):
         pathElement = i[j]
         if j == 0:
             writeGcode(pathElement[0], pathElement[1], 0)
             lastDirct = pathElement[2]
+            lastPoint = (pathElement[0], pathElement[1])
         else:
             if not (lastDirct == pathElement[2]):  # simple run-length compression
-                writeGcode(pathElement[0], pathElement[1], 255)
+				writeGcode(lastPoint[0],lastPoint[1],255)
+                #writeGcode(pathElement[0], pathElement[1], 255)
             lastDirct = pathElement[2]
+            lastPoint = (pathElement[0], pathElement[1])
 
 target.write('G00 X0 Y0 Z0 \n')
 target.flush()
