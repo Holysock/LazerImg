@@ -320,13 +320,13 @@ for i in joinedSubPaths:
         if j == 0:
             writeGcode(pathElement[0], pathElement[1], 0)
             lastDirct = pathElement[2]
-            lastPoint = (pathElement[0], pathElement[1])
+            #lastPoint = (pathElement[0], pathElement[1])
         else:
-            if not (lastDirct == pathElement[2]):  # simple run-length compression
-				writeGcode(lastPoint[0],lastPoint[1],255)
-                #writeGcode(pathElement[0], pathElement[1], 255)
+            #if not (lastDirct == pathElement[2]):  # simple run-length compression
+            #writeGcode(lastPoint[0],lastPoint[1],255)
+            writeGcode(pathElement[0], pathElement[1], 255)
             lastDirct = pathElement[2]
-            lastPoint = (pathElement[0], pathElement[1])
+            #lastPoint = (pathElement[0], pathElement[1])
 
 target.write('G00 X0 Y0 Z0 \n')
 target.flush()
