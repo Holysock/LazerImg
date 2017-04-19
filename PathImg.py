@@ -28,6 +28,7 @@ threshold = float(sys.argv[4])  # between 0 and 255
 offset_x = float(sys.argv[6])  # in mm
 offset_y = float(sys.argv[7])
 feedrate = float(sys.argv[8])
+
 renderScale = float(sys.argv[5])
 inch = 25.4#mm
 pxScale = inch/float(sys.argv[3])
@@ -61,8 +62,8 @@ elif (threshold <= 0):
 
 # Header of Gcode
 target.write('/#############################################################/ \n')
-target.write('/###########Gcode generated with PathImg.py V0.4##############/ \n')
-target.write('/######written by Nick Sidney Lemberger aka Holysocks#########/ \n')
+target.write('/########## Gcode generated with PathImg.py V0.4 #############/ \n')
+target.write('/##### written by Nick Sidney Lemberger aka Holysocks ########/ \n')
 target.write('/#############################################################/ \n\n')
 target.write('/%s/ \n' % (filename))
 target.write('\n\n\n')
@@ -308,10 +309,10 @@ print "Total number of sub-pathes: %s%s" % (len(joinedSubPaths), ' ' * 20)
 
 def writeGcode(nextPoint_x, nextPoint_y, laser):
     if laser > 0:
-        target.write('G01 X%s Y%s S%s F%.2f \n' % ((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y), laser, feedrate))
+        target.write('G01 X%s Y%s S%s F%.2f \n' % (size_x - (nextPoint_x * pxScale + offset_x),size_y - (nextPoint_y * pxScale + offset_y), laser, feedrate))
     else:
         target.write(
-            'G00 X%s Y%s S%s\n\n' % ((nextPoint_x * pxScale + offset_x), (nextPoint_y * pxScale + offset_y), laser))
+            'G00 X%s Y%s S%s\n\n' % (size_x - (nextPoint_x * pxScale + offset_x), size_y - (nextPoint_y * pxScale + offset_y), laser))
 
 
 for i in joinedSubPaths:
