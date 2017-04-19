@@ -17,7 +17,8 @@ show_przss3 = True
 show_connects = True
 square = 10
 
-if len(sys.argv) < 7:
+
+if len(sys.argv) < 9:
     print "Parameters: path_to_file, outputName, DPI, threshold, renderScale, offset_x, offset_y, feedrate_max"
     exit()
 
@@ -66,8 +67,10 @@ target.write('/#############################################################/ \n
 target.write('/%s/ \n' % (filename))
 target.write('\n\n\n')
 target.write('G90\n')
-target.write('G28\n')
-target.write('G00 X0 Y0 Z0 \n')
+target.write('S0\n')
+target.write('M03\n')
+#target.write('G28\n')
+#target.write('G00 X0 Y0 Z0 \n')
 
 
 def setPixel(value):  # returnes 0 or 255 for given value, depending on threshold
@@ -305,10 +308,10 @@ print "Total number of sub-pathes: %s%s" % (len(joinedSubPaths), ' ' * 20)
 
 def writeGcode(nextPoint_x, nextPoint_y, laser):
     if laser > 0:
-        target.write('G01 X%s Y%s Z%s F%.2f \n' % (nextPoint_x * pxScale + offset_x, nextPoint_y * pxScale + offset_y, laser, feedrate))
+        target.write('G01 X%s Y%s S%s F%.2f \n' % ((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y), laser, feedrate))
     else:
         target.write(
-            'G00 X%s Y%s Z%s\n\n' % (nextPoint_x * pxScale + offset_x, nextPoint_y * pxScale + offset_y, laser))
+            'G00 X%s Y%s S%s\n\n' % ((nextPoint_x * pxScale + offset_x), (nextPoint_y * pxScale + offset_y), laser))
 
 
 for i in joinedSubPaths:
@@ -322,13 +325,15 @@ for i in joinedSubPaths:
             lastDirct = pathElement[2]
             #lastPoint = (pathElement[0], pathElement[1])
         else:
-            #if not (lastDirct == pathElement[2]):  # simple run-length compression
-            #writeGcode(lastPoint[0],lastPoint[1],255)
-            writeGcode(pathElement[0], pathElement[1], 255)
+            if not (lastDirct == pathElement[2]):  # simple run-length compression
+            	#writeGcode(lastPoint[0],lastPoint[1],255)
+            	writeGcode(pathElement[0], pathElement[1], 1000)
             lastDirct = pathElement[2]
             #lastPoint = (pathElement[0], pathElement[1])
 
-target.write('G00 X0 Y0 Z0 \n')
+target.write('S0 \n')
+target.write('M05 \n')
+target.write('G00 X0 Y0\n')
 target.flush()
 print "Elapsed time: %.4fs" % (float(time.time()) - timeStart)
 print "Done :3"

@@ -21,7 +21,7 @@ if len(sys.argv) < 8:
 inch = 25.4#mm
 file_path = os.path.join(os.path.dirname(__file__), sys.argv[1])
 filename = sys.argv[2]
-pxScale = inch/float(sys.argv[3])  # to scale the pixels of the image in mm. 1.0 -> 1 pixel/mm
+pxScale = inch/float(sys.argv[3])  # scale pixel depending on DPI
 
 im = Image.open(file_path)
 im = im.convert('RGB')
