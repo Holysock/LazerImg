@@ -95,7 +95,7 @@ flag = 0
 lengthOfPath = 0
 lastPos = [0.0, 0.0]
 
-target.write('G00 X%s Y%s Z%s\n ' % (offset_x, offset_y, 0))
+#target.write('G00 X%s Y%s Z%s\n ' % (offset_x, offset_y, 0))
 
 for j in range(size_y):
     notWhiteFrom = 0
