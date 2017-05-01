@@ -33,7 +33,7 @@ inch = 25.4#mm
 pxScale = inch/float(sys.argv[3])
 
 
-im = Image.open(file_path)
+im = Image.open(file_path).rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
 im = im.convert('RGB')
 pixel = im.load()
 output_path = os.path.join(os.path.dirname(__file__), "output/")
@@ -45,7 +45,7 @@ totalPx = size_x * size_y
 print "Pixel: %spx X %spx " % (size_x, size_y)
 print "Size: %.2fmm X %.2fmm " % (size_x * pxScale, size_y * pxScale)
 
-target = open(output_path + filename + '.nc', 'w')
+target = open(output_path + filename + '.hpgl', 'w+')
 target.seek(0)
 
 plotter = plotlib.plot(int(size_x/renderScale), int(size_y/renderScale))  # just for visualization and debugging
@@ -59,9 +59,6 @@ if (threshold >= 255):
 elif (threshold <= 0):
     threshold = 0
 
-# Header of HPGL
-target.write('IN;SP1;PU0,0;')
-
 def setPixel(value):  # returnes 0 or 255 for given value, depending on threshold
     if value >= threshold:
         return 255
@@ -71,7 +68,7 @@ def setPixel(value):  # returnes 0 or 255 for given value, depending on threshol
 
 def plotL(x, y, r, g, b, s):  # simple visualisazion
     plotter.setColor(r, g, b)
-    plotter.plotdot(x / renderScale, y / renderScale)
+    plotter.plotdot(x / renderScale, (size_y-y) / renderScale)
     if (s):
         plotter.show()
 
@@ -151,7 +148,7 @@ print "Entropy: %.4f%s" % (200 * len(edgeList) / float(totalPx), '%   ')  # desc
 print "creating path..."
 
 stdout.flush()
-
+plotter.setBackground(0, 0, 0)
 
 def testIndex(x, y):  # prevents out of bounds exception
     if x <= -1 or y <= -1 or x >= size_x or y >= size_y:
@@ -159,9 +156,15 @@ def testIndex(x, y):  # prevents out of bounds exception
     else:
         return True
 
-
-plotter.setBackground(0, 0, 0)
-
+def closeCircle(x,y,path):
+	if len(path) <= 7: return (x,y,path)
+	a = path[0][0]
+	b = path[0][1]
+	if x-3 <= a <= x+3 and y-3 <= b <= y+3: 
+		path.append((a,b,path[0][2]))
+		return a,b,path
+	else: 
+		return x,y,path
 
 # Third process: creates a sub-path
 def searchPath(x, y):
@@ -235,18 +238,8 @@ def searchPath(x, y):
             y -= 1
             dirct = 8
         if dirct == 0:
-            return isSubPathCircle(x,y,subPath)  # returns end of path and created subPath, also checks is path is a circle (ends where it starts)
+            return closeCircle(x,y,subPath)  # returns end of path and created subPath, also checks is path is a circle (ends where it starts)
         subPath.append((x, y, dirct))
-
-def isSubPathCircle(x,y,path):
-	if len(path) <= 7: return (x,y,path)
-	a = path[0][0]
-	b = path[0][1]
-	if x-1 <= a <= x+1 and y-1 <= b <= y+1: 
-		path.append((a,b,path[0][2]))
-		return a,b,path
-	else: 
-		return x,y,path
 
 def seachNextEdge(x, y, givenList):  # returns edge with smallest distance to the given one
     nearestEdge = givenList[0]  # note: version 1. Do not use for Entropy > 10% !!
@@ -294,14 +287,22 @@ while len(edgeList) > 0:  # as long as there are edges left...
 
 print "Total number of sub-pathes: %s%s" % (len(joinedSubPaths), ' ' * 20)
 
-
+current_command = ""
 def writeHPGL(nextPoint_x, nextPoint_y, laser):
+    global current_command
     if laser > 0:
-        target.write('PD%s,%s;' % (size_x - (nextPoint_x * pxScale + offset_x),size_y - (nextPoint_y * pxScale + offset_y)))
+	if current_command == "PD": target.write(',%s,%s'%((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y)))
+        else:
+            target.write(';PD%s,%s'%((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y)))
+            current_command = "PD"
     else:
-        target.write(
-            'PU%s,%s;' % (size_x - (nextPoint_x * pxScale + offset_x), size_y - (nextPoint_y * pxScale + offset_y)))
+        if current_command == "PU": target.write(',s,%s'%((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y)))
+        else:
+            target.write(';PU%s,%s'%((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y)))
+            current_command = "PU"
 
+# Header of HPGL
+target.write('IN;SP1;PU0,0')
 
 for i in joinedSubPaths:
     lastDirct = 0
@@ -310,22 +311,22 @@ for i in joinedSubPaths:
     for j in xrange(len(i)):
         pathElement = i[j]
         if j == 0:
-            writeGcode(pathElement[0], pathElement[1], 0)
+            writeHPGL(pathElement[0], pathElement[1], 0)
             lastDirct = pathElement[2]
             lastPoint = (pathElement[0], pathElement[1])
         else:
             if not (lastDirct == pathElement[2]):  # simple run-length compression
-            	writeGcode(lastPoint[0],lastPoint[1],1000)
-            	writeGcode(pathElement[0], pathElement[1], 1000)
+            	#writeHPGL(lastPoint[0],lastPoint[1],1)
+            	writeHPGL(pathElement[0], pathElement[1], 1)
+            elif j == len(i)-1:	
+            	writeHPGL(pathElement[0], pathElement[1], 1)
             lastDirct = pathElement[2]
-            lastPoint = (pathElement[0], pathElement[1])
+            #lastPoint = (pathElement[0], pathElement[1])
 
-target.write('S0 \n')
-target.write('M05 \n')
-target.write('G00 X0 Y0\n')
+target.write(';SP0;PU0,0;IN;')
 target.flush()
 print "Elapsed time: %.4fs" % (float(time.time()) - timeStart)
 print "Done :3"
 print "Press Enter to exit."
-im.save(output_path + filename, format="png")
+#im.save(output_path + filename, format="png")
 raw_input()
