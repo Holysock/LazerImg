@@ -14,7 +14,7 @@ timeStart = float(time.time())
 show_przss1 = True
 show_przss2 = True
 show_przss3 = True
-show_connects = True
+show_connects = False
 square = 10
 
 
