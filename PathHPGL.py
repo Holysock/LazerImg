@@ -30,6 +30,7 @@ offset_y = float(sys.argv[7])
 
 renderScale = float(sys.argv[5])
 inch = 25.4#mm
+unit = 40 # 1mm = 40 hpgl base units
 pxScale = inch/float(sys.argv[3])
 
 
@@ -291,14 +292,14 @@ current_command = ""
 def writeHPGL(nextPoint_x, nextPoint_y, laser):
     global current_command
     if laser > 0:
-	if current_command == "PD": target.write(',%s,%s'%((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y)))
+	if current_command == "PD": target.write(',%d,%d'%((nextPoint_x * pxScale + offset_x)*unit,(nextPoint_y * pxScale + offset_y)*unit))
         else:
-            target.write(';PD%s,%s'%((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y)))
+            target.write(';PD%d,%d'%((nextPoint_x * pxScale + offset_x)*unit,(nextPoint_y * pxScale + offset_y)*unit))
             current_command = "PD"
     else:
-        if current_command == "PU": target.write(',s,%s'%((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y)))
+        if current_command == "PU": target.write(',d,%d'%((nextPoint_x * pxScale + offset_x)*unit,(nextPoint_y * pxScale + offset_y)*unit))
         else:
-            target.write(';PU%s,%s'%((nextPoint_x * pxScale + offset_x),(nextPoint_y * pxScale + offset_y)))
+            target.write(';PU%d,%d'%((nextPoint_x * pxScale + offset_x)*unit,(nextPoint_y * pxScale + offset_y)*unit))
             current_command = "PU"
 
 # Header of HPGL
