@@ -52,8 +52,7 @@ target.seek(0)
 plotter = plotlib.plot(int(size_x/renderScale), int(size_y/renderScale))  # just for visualization and debugging
 plotter.setBackground(0, 0, 0)
 
-precalc = math.sqrt(math.pow(255, 2) + math.pow(255, 2) + math.pow(255, 2))
-# precalculation of the length of an 3 dimensional RGB-color vector (255,255,255) - white
+precalc = math.sqrt(3)*255
 
 if (threshold >= 255):
     threshold = 255
