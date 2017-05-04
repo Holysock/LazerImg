@@ -1,12 +1,4 @@
 # Author: Nick Sidney Lemberger
-# Last edit: 17:24 2/2/2016
-
-# Simple tool to generate G-Code from images / bitmaps
-# Z-axis is used for direct PWM control of the laser
-# Usage (on linux): python LazerImg.py [path-to-image.file-extension] [name-of-resulting-gcode-file(without file extension)] [scale-factor][offset-x][offset-y][feedrate][laser-scale-factor]
-
-# NEW: Optimized paths
-# next step: friends to friends analysis
 
 import math
 import os
@@ -23,7 +15,7 @@ file_path = os.path.join(os.path.dirname(__file__), sys.argv[1])
 filename = sys.argv[2]
 pxScale = inch/float(sys.argv[3])  # scale pixel depending on DPI
 
-im = Image.open(file_path)
+im = Image.open(file_path).rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
 im = im.convert('RGB')
 pixel = im.load()
 
@@ -35,14 +27,14 @@ size_y = int(im.size[1])
 print "pixel: %spx x %spx" % (size_x, size_y)
 print "size: %smm x %smm" % (size_x * pxScale, size_y * pxScale)
 
-target = open(output_path + filename + '.nc', 'w')
+target = open(output_path + filename + '.nc', 'w+')
 target.seek(0)
 
 offset_x = float(sys.argv[4])  # in mm
 offset_y = float(sys.argv[5])
 feedrate = float(sys.argv[6])  # in mm/min. note: change to dynamic feedrate variation later
 
-laserScale = float(sys.argv[7])  # Value between 0 and 1
+laserScale = float(sys.argv[7])  # 0 < value <= 1
 
 if laserScale > 1:
     laserScale = 1
@@ -59,24 +51,22 @@ def setFr(value):
         return feedrate - feedrate * ((float(value) - 128) / 127) * 0.5
 
 
-    # Head of Gcode
-feedratehome = 450
-
+# Head of Gcode
 target.write('/#############################################################/ \n')
-target.write('/###########Gcode generated with LazerImg.py V0.1#############/ \n')
-target.write('/######written by Nick Sidney Lemberger aka Holysock##########/ \n')
+target.write('/########## Gcode generated with LazerImg.py V0.1 ############/ \n')
+target.write('/##### written by Nick Sidney Lemberger aka Holysocks ########/ \n')
 target.write('/#############################################################/ \n\n')
 target.write('/%s/ \n' % (filename))
-target.write('/laser_engraver(diode, 445nm, 2000mW)/ \n')
-target.write('/X%s Y%s/ \n' % (offset_x, offset_y))
 target.write('\n\n\n')
-#target.write('F%s \n\n\n' % (feedrateHome))  # redundant
+target.write('G90\n')
+target.write('S0\n')
+target.write('M03\n')
 
 # preprocessing:
 lengthOfPath2 = 0
 
-precalc = math.sqrt(math.pow(255, 2) + math.pow(255, 2) + math.pow(255,
-                                                                   2))  # precalculation of the length of an 3 dimensional RGB-color vector (255,255,255) - white
+precalc = math.sqrt(3)*255
+
 for j in range(size_y):  # iterates through y-axis of the image
     for i in range(size_x):  # iterates through x-axis of the image
         pixelRGB = pixel[i, j]  # get the RGB-vector of current pixel
@@ -145,22 +135,22 @@ for j in range(size_y):
                 edge == 1 and cFlag == 1):  # simple compression. Pixels with the same greyscale value are compressed into one path
 
             if edge == 1:
-                target.write('G01 X%s Y%s Z%s F%.2f \n' % (
-                    (k * pxScale) + offset_x, (j * pxScale) + offset_y, thisPX,
-                    setFr(thisPX))) # writes a simple G1 path with Z as modulation value
+                target.write('G01 X%s Y%s S%s F%.2f \n' % (
+                    (k * pxScale) + offset_x, (j * pxScale) + offset_y, int(thisPX*1000/255),
+                    setFr(thisPX))) # writes a simple G1 path with S to control laser PWM
             if k != notWhiteTo and flag == 0 and edge == 0:
-                target.write('G01 X%s Y%s Z%s F%.2f \n' % (
-                    ((k + 0.5) * pxScale) + offset_x, (j * pxScale) + offset_y, thisPX, setFr(thisPX)))
+                target.write('G01 X%s Y%s S%s F%.2f \n' % (
+                    ((k + 0.5) * pxScale) + offset_x, (j * pxScale) + offset_y, int(thisPX*1000/255), setFr(thisPX)))
             elif k != notWhiteFrom and flag == 1 and edge == 0:
-                target.write('G01 X%s Y%s Z%s F%.2f \n' % (
-                    ((k - 0.5) * pxScale) + offset_x, (j * pxScale) + offset_y, thisPX, setFr(thisPX)))
+                target.write('G01 X%s Y%s S%s F%.2f \n' % (
+                    ((k - 0.5) * pxScale) + offset_x, (j * pxScale) + offset_y, int(thisPX*1000/255), setFr(thisPX)))
             lengthOfPath += math.sqrt(
                 math.pow((k - lastPos[0]) * pxScale, 2) + math.pow((j - lastPos[1]) * pxScale, 2))
             lastPos[0:2] = k, j
 
     if cFlag == 1:
         target.write(
-            'G00 X%s Y%s Z%s\n' % ((k * pxScale) + offset_x, ((j + 1) * pxScale) + offset_y, 0))
+            'G00 X%s Y%s S%s\n' % ((k * pxScale) + offset_x, ((j + 1) * pxScale) + offset_y, 0))
 
         lengthOfPath += math.sqrt(
             math.pow((k - lastPos[0]) * pxScale, 2) + math.pow(((j + 1) - lastPos[1]) * pxScale, 2))
@@ -171,16 +161,13 @@ for j in range(size_y):
 
 print 'Calculation of path done.    '
 
-target.write('\n\nG00 X%s Y%s Z%s \n' % (0, 0, 0))  # home
-target.write('M0 ')
+target.write('S0 \n')
+target.write('M05 \n')
+target.write('G00 X0 Y0\n')
 target.close
 
-print 'Total length of path: %.2fm. Estimated time: %.2fmin' % (
-lengthOfPath2 / 1000, lengthOfPath2 / feedrate)
-print 'Total length of optimized path: %.2fm. Estimated time: %.2fmin' % (
-lengthOfPath / 1000, lengthOfPath / feedrate)
+print 'Total length of path: %.2fm.' % (lengthOfPath / 1000)
 
 print 'Done :3'
 
-im.show()
-im.save(output_path + filename, format="png")
+im.rotate(180).transpose(Image.FLIP_LEFT_RIGHT).show()
