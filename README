@@ -1,6 +1,8 @@
 This set of scripts is used to generate simple g-code (only using GO and G1 commands, G2 approx. will follow) 
 to use with laser-engravers-
 
+!! Laser is no longer controlled via Z-Axis. Instead now the S-command {0-1000} for PWM spindle controlling is used. 
+
 Use: 
 
 to only make outlines, use:
@@ -9,7 +11,7 @@ python PathImg.py path_to_file, outputName, DPI, threshold, renderScale, offset_
 to engrave areas line by line:
 python LazerImg.py path_to_file, outputName, DPI, offset_x, offset_y, feedrate_max, laser_scale
 
-to view g-code:
+to view g-code: // may not work with current version of generated g-code. 
 python gcodeViewer.py  path_to_file pixel_per_mm
 
 processed images and g-codes are saved in /output
