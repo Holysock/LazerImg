@@ -6,7 +6,7 @@ import os
 #import sys
 import time
 from sys import stdout
-from PIL import Image
+from PIL import Image,ImageFilter
 import plotlib
 import argparse
 import numpy as np
@@ -27,10 +27,12 @@ ap.add_argument("-d", "--dpi", required=True, help="Set DPI of input. Use this t
 ap.add_argument("-f", "--feedrate", required=True, help="Sets max feedrate.")
 ap.add_argument("--hpgl", help="Set output protocol to HPGL instead of gcode", action="store_true")
 ap.add_argument("-t", "--threshold", help="Set threshold for black/white conversion 0<t<255. Default: 128 ")
-ap.add_argument("-off", "--offset", help="Set offset. x,y Default: 0,0 ")
+ap.add_argument("-offY", "--offsetX", help="Set offset. x Default: 0,0 ")
+ap.add_argument("-offX", "--offsetY", help="Set offset. y Default: 0,0 ")
 ap.add_argument("--show", help="Usage: --show ""<allThingsToShow>"" things to show: bw, edges, paths")
 ap.add_argument("--debugg", help="Shows various debugg-messages", action="store_true")
 ap.add_argument("-s", "--scale", help="Scales windows. Default 1")
+ap.add_argument("-ch", "--closeHoles", help="close small holes")
 args = ap.parse_args()
 
 hpgl = False
@@ -43,13 +45,18 @@ else: hpgl = False
 gcode = not hpgl
 if args.threshold:  threshold = int(args.threshold)
 offset_x, offset_y = 0, 0
-if args.offset: offset_x, offset_y = args.offset
+if args.offsetX: offset_x = float(args.offsetX)
+if args.offsetY: offset_y = float(args.offsetY)
 feedrate = args.feedrate
 renderScale = 1  # TODO implement auto scale
 if args.scale: renderScale = float(args.scale)
 inch = 25.4  # in mm
 unit = 40  # 1mm = 40 hpgl base units
 pxScale = inch / float(args.dpi)
+if args.closeHoles: closeHolesStrength = int(args.closeHoles)
+else: closeHolesStrength = 0
+if args.show: show_przss1 = show_przss2 = show_przss3 = 1
+else: show_przss1 = show_przss2 = show_przss3 = 0
 
 im = Image.open(file_path).rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
 im = im.convert('RGB')
@@ -85,9 +92,7 @@ if gcode:
     target.write('/#############################################################/ \n\n')
     target.write('/%s/ \n' % (filename))
     target.write('\n\n\n')
-    target.write('G90\n')
-    target.write('S0\n')
-    target.write('M03\n')
+    target.write('G95 %s \n' % (feedrate))
     # target.write('G28\n')
     # target.write('G00 X0 Y0 Z0 \n')
 # Header of Gcode
@@ -124,6 +129,23 @@ for j in xrange(size_y):  # First process: convert image to B&W
     plotter.show()
 
 print "converting complete!"
+if closeHolesStrength > 0:
+    im = im.filter(ImageFilter.SMOOTH)
+    im = im.filter(ImageFilter.SHARPEN)
+    im = im.filter(ImageFilter.DETAIL)
+    im = im.filter(ImageFilter.MedianFilter(closeHolesStrength))
+    im = im.filter(ImageFilter.SMOOTH)
+    im = im.filter(ImageFilter.DETAIL)
+    im = im.filter(ImageFilter.MedianFilter(closeHolesStrength))
+    for j in xrange(size_y):  # First process: convert image to B&W
+        for i in xrange(size_x):
+            pixel[i, j] = im.getpixel((i, j))
+            if show_przss1:
+                plotL(i, j, pixel[i, j][0],pixel[i, j][1],pixel[i, j][2], False)
+        print "converting: %.2f%s\r" % (100 * (float(j + 1)) / size_y, "%      "),
+        stdout.flush()
+        plotter.show()
+            
 
 im.save(output_path + filename + '_BW', format="png")
 
@@ -398,8 +420,7 @@ for i in joinedSubPaths:
 if hpgl:
     target.write(';SP0;PU0,0;IN;')
 if gcode:
-    target.write('S0 \n')
-    target.write('M05 \n')
+    target.write('G01 S0 \n')
     target.write('G00 X0 Y0\n')
 target.flush()
 print "Elapsed time: %.4fs" % (float(time.time()) - timeStart)
