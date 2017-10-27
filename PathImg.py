@@ -27,8 +27,8 @@ ap.add_argument("-d", "--dpi", required=True, help="Set DPI of input. Use this t
 ap.add_argument("-f", "--feedrate", required=True, help="Sets max feedrate.")
 ap.add_argument("--hpgl", help="Set output protocol to HPGL instead of gcode", action="store_true")
 ap.add_argument("-t", "--threshold", help="Set threshold for black/white conversion 0<t<255. Default: 128 ")
-ap.add_argument("-offY", "--offsetX", help="Set offset. x Default: 0,0 ")
-ap.add_argument("-offX", "--offsetY", help="Set offset. y Default: 0,0 ")
+ap.add_argument("-offX", "--offsetX", help="Set offset. x Default: 0,0 ")
+ap.add_argument("-offY", "--offsetY", help="Set offset. y Default: 0,0 ")
 ap.add_argument("--show", help="Usage: --show ""<allThingsToShow>"" things to show: bw, edges, paths")
 ap.add_argument("--debugg", help="Shows various debugg-messages", action="store_true")
 ap.add_argument("-s", "--scale", help="Scales windows. Default 1")
@@ -53,7 +53,12 @@ if args.scale: renderScale = float(args.scale)
 inch = 25.4  # in mm
 unit = 40  # 1mm = 40 hpgl base units
 pxScale = inch / float(args.dpi)
-if args.closeHoles: closeHolesStrength = int(args.closeHoles)
+if args.closeHoles: 
+    closeHolesStrength = int(args.closeHoles)
+    if closeHolesStrength % 2 == 0:
+        print("--closeHoles value must be an odd integer!")
+        print("Using next smaller integer {0} instead".format(closeHolesStrength-1))
+        closeHolesStrength = closeHolesStrength -1 
 else: closeHolesStrength = 0
 if args.show: show_przss1 = show_przss2 = show_przss3 = 1
 else: show_przss1 = show_przss2 = show_przss3 = 0
@@ -92,7 +97,7 @@ if gcode:
     target.write('/#############################################################/ \n\n')
     target.write('/%s/ \n' % (filename))
     target.write('\n\n\n')
-    target.write('G95 %s \n' % (feedrate))
+    target.write('G95 M%s \n' % (feedrate))
     # target.write('G28\n')
     # target.write('G00 X0 Y0 Z0 \n')
 # Header of Gcode
@@ -147,7 +152,7 @@ if closeHolesStrength > 0:
         plotter.show()
             
 
-im.save(output_path + filename + '_BW', format="png")
+#im.save(output_path + filename + '_BW', format="png")
 
 edge = (255, 0, 0)  # edges (black to white or white to black) are red
 edgeList = []  # contains position of all edges as tupels (x,y)
