@@ -18,7 +18,7 @@ show_przss2 = True
 show_przss3 = True
 show_connects = False
 square = 10
-deltamax = 1.5
+deltamax = 3
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--path", required=True, help="Path to file to convert")
@@ -33,6 +33,7 @@ ap.add_argument("--show", help="Usage: --show ""<allThingsToShow>"" things to sh
 ap.add_argument("--debugg", help="Shows various debugg-messages", action="store_true")
 ap.add_argument("-s", "--scale", help="Scales windows. Default 1")
 ap.add_argument("-ch", "--closeHoles", help="close small holes")
+ap.add_argument("--delta", help="set max error for reduction of pixel stairs")
 args = ap.parse_args()
 
 hpgl = False
@@ -62,6 +63,7 @@ if args.closeHoles:
 else: closeHolesStrength = 0
 if args.show: show_przss1 = show_przss2 = show_przss3 = 1
 else: show_przss1 = show_przss2 = show_przss3 = 0
+if args.delta: deltamax = float(args.delta)
 
 im = Image.open(file_path).rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
 im = im.convert('RGB')
