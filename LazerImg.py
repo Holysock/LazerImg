@@ -7,7 +7,7 @@ from sys import stdout
 from PIL import Image
 
 if len(sys.argv) < 8:
-    print "parameters: path_to_file, outputName, DPI, offset_x, offset_y, feedrate_max, laser_scale"
+    print "parameters: path_to_file, outputName, DPI, offset_x, offset_y, feedrate_max, feedrate_laser, laser_scale"
     exit()
 
 inch = 25.4  # mm
@@ -15,7 +15,7 @@ file_path = os.path.join(os.path.dirname(__file__), sys.argv[1])
 filename = sys.argv[2]
 pxScale = inch / float(sys.argv[3])  # scale pixel depending on DPI
 
-im = Image.open(file_path).rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
+im = Image.open(file_path).rotate(180)
 im = im.convert('RGB')
 pixel = im.load()
 
@@ -32,9 +32,9 @@ target.seek(0)
 
 offset_x = float(sys.argv[4])  # in mm
 offset_y = float(sys.argv[5])
-feedrate = float(sys.argv[6])  # in mm/min. note: change to dynamic feedrate variation later
-
-laserScale = float(sys.argv[7])  # 0 < value <= 1
+feedrate_max = float(sys.argv[6])  # in mm/min. note: change to dynamic feedrate variation later
+feedrate_laser = float(sys.argv[7])
+laserScale = float(sys.argv[8])  # 0 < value <= 1
 
 if laserScale > 1:
     laserScale = 1
@@ -42,14 +42,19 @@ elif laserScale < 0:
     laserScale = 0
 
 
-def setFr(value):
-    if (value <= 10):
-        return feedrate * 2
-    elif (value <= 127):
-        return feedrate
-    else:
-        return feedrate - feedrate * ((float(value) - 128) / 127) * 0.5
+#def setFr(value):
+#    if (value <= 10):
+#        return feedrate * 2
+#    elif (value <= 127):
+#        return feedrate
+#    else:
+#        return feedrate - feedrate * ((float(value) - 128) / 127) * 0.5
 
+def setFr(value):
+    if(value <= 10):
+        return feedrate_max
+    else:
+        return feedrate_laser
 
 # Head of Gcode
 target.write('/#############################################################/ \n')
@@ -95,7 +100,7 @@ for j in range(size_y):
 
     for c in range(size_x):
         pixelRGB = pixel[c, j]
-        newPX = pixelRGB[0]  # [0] [1] and [2] are the same
+        newPX = pixelRGB[0]  # [0] [1] and [2] are the same value
 
         if cFlag == 0 and newPX < 10:
             notWhiteFrom = c
@@ -172,4 +177,4 @@ print 'Total length of path: %.2fm.' % (lengthOfPath / 1000)
 
 print 'Done :3'
 
-im.rotate(180).transpose(Image.FLIP_LEFT_RIGHT).show()
+im.rotate(180).show()
