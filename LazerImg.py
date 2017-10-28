@@ -88,6 +88,8 @@ print 'Preprocessing done.    '
 
 flag = 0
 lengthOfPath = 0
+skipped_paths = 0
+number_of_paths = 0
 lastPos = [0.0, 0.0]
 
 # target.write('G00 X%s Y%s Z%s\n ' % (offset_x, offset_y, 0))
@@ -136,9 +138,7 @@ for j in range(size_y):
             tmpPX = pixel[k - 1, j]
             nextPX = tmpPX[1]
 
-        if thisPX != nextPX or (
-                        edge == 1 and cFlag == 1):  # simple compression. Pixels with the same greyscale value are compressed into one path
-
+        if thisPX != nextPX or (edge == 1 and cFlag == 1):  # simple compression. Pixels with the same greyscale value are compressed into one path
             if edge == 1:
                 target.write('G01 X%s Y%s S%s F%.2f \n' % (
                     (k * pxScale) + offset_x, (j * pxScale) + offset_y, int(thisPX * 1000 / 255),
@@ -154,10 +154,13 @@ for j in range(size_y):
             lengthOfPath += math.sqrt(
                 math.pow((k - lastPos[0]) * pxScale, 2) + math.pow((j - lastPos[1]) * pxScale, 2))
             lastPos[0:2] = k, j
+            number_of_paths += 1
+        else: skipped_paths += 1
 
     if cFlag == 1:
         target.write(
             'G00 X%s Y%s S%s\n' % ((k * pxScale) + offset_x, ((j + 1) * pxScale) + offset_y, 0))
+        number_of_paths += 1
 
         lengthOfPath += math.sqrt(
             math.pow((k - lastPos[0]) * pxScale, 2) + math.pow(((j + 1) - lastPos[1]) * pxScale, 2))
@@ -173,8 +176,11 @@ target.write('M05 \n')
 target.write('G00 X0 Y0\n')
 target.close
 
-print 'Total length of path: %.2fm.' % (lengthOfPath / 1000)
 
+print 'Numer of skipped paths: %d' % (skipped_paths)
+print 'Total number of paths: %d' % (number_of_paths)
+print 'Total length of path: %.2f m.' % (lengthOfPath / 1000)
+print 'Estimated time: %.2f min' % (lengthOfPath/float(feedrate_laser))
 print 'Done :3'
 
 im.rotate(180).transpose(Image.FLIP_LEFT_RIGHT).show()
