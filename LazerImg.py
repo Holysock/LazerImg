@@ -15,7 +15,7 @@ file_path = os.path.join(os.path.dirname(__file__), sys.argv[1])
 filename = sys.argv[2]
 pxScale = inch / float(sys.argv[3])  # scale pixel depending on DPI
 
-im = Image.open(file_path).rotate(180)
+im = Image.open(file_path).rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
 im = im.convert('RGB')
 pixel = im.load()
 
@@ -177,4 +177,4 @@ print 'Total length of path: %.2fm.' % (lengthOfPath / 1000)
 
 print 'Done :3'
 
-im.rotate(180).show()
+im.rotate(180).transpose(Image.FLIP_LEFT_RIGHT).show()
