@@ -376,9 +376,11 @@ while len(edgeList) > 0:  # as long as there are edges left...
 print "Total number of sub-pathes: %s%s" % (len(joinedSubPaths), ' ' * 20)
 
 current_command = ""
+numberOfLines = 0
 
 def writeHPGL(nextPoint_x, nextPoint_y, laser):
     global current_command
+    global numberOfLines
     if laser > 0:
         if current_command == "PD":
             target.write(
@@ -395,14 +397,17 @@ def writeHPGL(nextPoint_x, nextPoint_y, laser):
             target.write(
                 ';PU%d,%d' % ((nextPoint_x * pxScale + offset_x) * unit, (nextPoint_y * pxScale + offset_y) * unit))
             current_command = "PU"
+    numberOfLines += 1        
 
 def writeGcode(nextPoint_x, nextPoint_y, laser):
+    global numberOfLines
     if laser > 0:
         target.write(
             'G01 X%s Y%s S%s\n' % ((nextPoint_x * pxScale + offset_x), (nextPoint_y * pxScale + offset_y), laser))
     else:
         target.write(
             'G00 X%s Y%s S%s\n\n' % ((nextPoint_x * pxScale + offset_x), (nextPoint_y * pxScale + offset_y), laser))
+    numberOfLines += 1
 
 for i in joinedSubPaths:
     lastDirct = 0
@@ -416,7 +421,7 @@ for i in joinedSubPaths:
             lastDirct = pathElement[2]
             lastPoint = (pathElement[0], pathElement[1])
         else:
-            if not (lastDirct == pathElement[2]) or True:  # simple run-length compression
+            if not (lastDirct == pathElement[2]) or True:  #dont use, buggy # simple run-length compression 
                 if hpgl: writeHPGL(pathElement[0], pathElement[1], 1)
                 if gcode: writeGcode(pathElement[0], pathElement[1], 1000)
             elif j == len(i) - 1:
@@ -431,6 +436,7 @@ if gcode:
     target.write('G00 X0 Y0\n')
 target.flush()
 print "Elapsed time: %.4fs" % (float(time.time()) - timeStart)
+print "Number of lines: %d" % (numberOfLines)
 print "Done :3"
 print "Press Enter to exit."
 im.save(output_path + filename, format="png")
